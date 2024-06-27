@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using WorkerService1.Aggregates;
 using WorkerService1.Model;
 using WorkerService1.Service;
 
@@ -8,8 +10,10 @@ namespace WorkerService1.Test
 {
     public class WorkerServiceTests
     {
+        private IConfiguration _configuration;
         private readonly ServiceProvider _serviceProvider;
         private readonly Worker _workerService;
+        private readonly AppSetting _appSetting;
 
         public WorkerServiceTests()
         {
@@ -21,7 +25,26 @@ namespace WorkerService1.Test
             serviceCollection.AddScoped<IJobLogRepo, JobLogRepo>();
             serviceCollection.AddLogging();
 
+            serviceCollection.AddAutoMapper(cfg =>
+            {
+                cfg.CreateMap<Job, JobDto>();
+            });
+
             _serviceProvider = serviceCollection.BuildServiceProvider();
+
+
+            _configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            //.AddUserSecrets("secret-token")
+            .AddEnvironmentVariables()
+            .Build();
+
+
+            _appSetting = new AppSetting()
+            {
+                SubSetting = _configuration["MainSetting:SubSetting"].ToString()
+            };
+
 
             var logger = _serviceProvider.GetRequiredService<ILogger<Worker>>();
             _workerService = new Worker(logger, _serviceProvider);

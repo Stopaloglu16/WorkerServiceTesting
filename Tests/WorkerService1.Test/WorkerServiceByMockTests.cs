@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Net;
+using WorkerService1.Aggregates;
 using WorkerService1.Model;
 using WorkerService1.Service;
 
@@ -23,6 +25,8 @@ namespace WorkerService1.Test
 
             serviceCollection.AddScoped(_ => _jobRepoMock.Object);
             serviceCollection.AddScoped(_ => _jobLogRepoMock.Object);
+           
+
             _serviceProvider = serviceCollection.BuildServiceProvider();
 
             _workerService = new Worker(_loggerMock.Object, _serviceProvider);
@@ -32,10 +36,10 @@ namespace WorkerService1.Test
         public async Task ExecuteAsync_ProcessesJobs()
         {
             // Arrange
-            var jobs = new List<Job>
+            var jobs = new List<JobDto>
             {
-                new Job { Id = 1, Name = "Job1" },
-                new Job { Id = 2, Name = "Job2" }
+                new JobDto { Id = 1, Name = "Job1" },
+                new JobDto { Id = 2, Name = "Job2" }
             };
 
             _jobRepoMock.Setup(repo => repo.GetJobsAsync())
@@ -52,7 +56,7 @@ namespace WorkerService1.Test
             // Act
             await _workerService.StartAsync(cancellationTokenSource.Token);
 
-            // await Task.Delay(10000);
+            await Task.Delay(10000);
 
             // Assert
             // Validate that jobs were processed, depending on your logic
